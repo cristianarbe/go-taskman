@@ -1,6 +1,0 @@
-if [[ $1 == "do" ]]; then
-	second="-num=${2}"
-fi
-
-go run ./taskman.go -word=$1 $second 
-
