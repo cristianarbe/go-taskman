@@ -143,14 +143,14 @@ func add_task() task {
 		mandatory = true
 	}
 
-	fmt.Println("due date (yyy-mm-dd): ")
+	fmt.Print("due date (yyy-mm-dd): ")
 	due_date, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 	if due_date == "\n" {
 		due_date = "no date"
 	}
 	due_date = strings.TrimSuffix(due_date, "\n")
 
-	fmt.Println("task name: ")
+	fmt.Print("task name: ")
 	task_name, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 	task_name = strings.TrimSuffix(task_name, "\n")
 
