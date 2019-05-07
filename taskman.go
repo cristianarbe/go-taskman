@@ -47,7 +47,6 @@ func initi(dailies_cache, tasks_cache, last_run_cache, today_cache string) (int,
 	if current_date == last_run_date {
 	} else {
 		today = 0
-		fmt.Println("new day")
 		dailies = load_csv(dailies_cache)
 		ioutil.WriteFile(last_run_cache, []byte(current_date), 0644)
 		ioutil.WriteFile(today_cache, []byte(string(today)), 0644)
