@@ -3,11 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	//"io";
 	"flag"
 	"io/ioutil"
 	"time"
-	//"encoding/binary"
 	"os"
 	"os/user"
 	"strconv"
@@ -15,41 +13,58 @@ import (
 )
 
 // Reading files requires checking most calls for errors. This helper will streamline our error checks below.
-
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
 
+// Name of the user
 const name string = "Cristian"
-const quote string = "HARD WORK BEATS TALENT"
 
+// Struct that contains all of the data of a task
 type task struct {
 	daily       bool
 	mandatory   bool
-	due_date    string
-	date_added  string
+	dueDate     string
+	dateAdded   string
 	description string
 }
 
 // Checks if the program has been run today
 // Initializes the main slice
-func initi(dailies_cache, tasks_cache, last_run_cache, today_cache string) (int, []task) {
+func initi(dailiesCache, tasksCache, lastRunCache, today_cache string) (int, []task) {
 
-	current_date := time.Now().Format("20060102")
-	byte_array, _ := ioutil.ReadFile(last_run_cache)
-	last_run_date := string(byte_array)
+	// Sets the current date
+	currentDate := time.Now().Format("20060102")
+	// This is the raw read from the last run date
+	byteArray, _ := ioutil.ReadFile(lastRunCache)
+	// This is the last run date as a string
+	lastRunDate := string(byteArray)
+	// Raw read from the tasks done today
 	today_bin, _ := ioutil.ReadFile(today_cache)
+	// Int of the tasks done today
 	today, _ := strconv.Atoi(string(today_bin))
+
+	// Initializes the variable where the dailies will be stored
 	var dailies []task
 
-	if current_date == last_run_date {
+	if currentDate == lastRunDate {
 	} else {
 		today = 0
-		dailies = load_csv(dailies_cache)
-		ioutil.WriteFile(last_run_cache, []byte(current_date), 0644)
+		dailies = load_csv(dailiesCache)
+		ioutil.WriteFile(lastRunCache, []byte(currentDate), 0644)
 		ioutil.WriteFile(today_cache, []byte(string(today)), 0644)
+
+		_, _, day := time.Now().Date()
+		for i, j := range dailies {
+			dayiseven := day%2 == 0
+			taskIsEven := j.dueDate == "even" || j.dueDate == "everyday"
+			if dayiseven == taskIsEven {
+			} else {
+				dailies = append(dailies[:i], dailies[i+1:]...)
+			}
+		}
 	}
 
 	return today, dailies
@@ -61,22 +76,22 @@ func array_grep(task_list []task, value bool) []task {
 	var final []task
 	for i, j := range task_list {
 
-		_, _, day := time.Now().Date()
+		//_, _, day := time.Now().Date()
 
-		should_write := true
+		// should_write := true
 
-		if j.due_date != "everyday" {
-			isdaily := j.daily
-			taskiseven := j.due_date == "even"
-			dayiseven := day%2 == 0
+		//if j.dueDate != "everyday" {
+		//	isdaily := j.daily
+		//	taskiseven := j.dueDate == "even"
+		//	dayiseven := day%2 == 0
 
-			should_write = !isdaily || (!taskiseven && !dayiseven) || (taskiseven && dayiseven)
-		}
+		//		should_write = !isdaily || (!taskiseven && !dayiseven) || (taskiseven && dayiseven)
+		//}
 
 		matches_input := j.daily == value
 		//fmt.Println(should_write,j)
 
-		if should_write && matches_input {
+		if /*should_write &&*/ matches_input {
 			fmt.Print("[#", i, "] ")
 			if j.mandatory == true {
 				fmt.Print("! ")
@@ -84,7 +99,7 @@ func array_grep(task_list []task, value bool) []task {
 				fmt.Print("  ")
 			}
 			final = append(final, j)
-			fmt.Print(j.description, " (", j.due_date, ")")
+			fmt.Print(j.description, " (", j.dueDate, ")")
 			fmt.Print("\n")
 		}
 	}
@@ -115,7 +130,7 @@ func do_task(a []task, i int) []task {
 func add_task() task {
 	var daily bool
 	var mandatory bool
-	var due_date string
+	var dueDate string
 	var task_name string
 
 	fmt.Print("daily? (y/N): ")
@@ -144,17 +159,17 @@ func add_task() task {
 	}
 
 	fmt.Print("due date (yyy-mm-dd): ")
-	due_date, _ = bufio.NewReader(os.Stdin).ReadString('\n')
-	if due_date == "\n" {
-		due_date = "no date"
+	dueDate, _ = bufio.NewReader(os.Stdin).ReadString('\n')
+	if dueDate == "\n" {
+		dueDate = "no date"
 	}
-	due_date = strings.TrimSuffix(due_date, "\n")
+	dueDate = strings.TrimSuffix(dueDate, "\n")
 
 	fmt.Print("task name: ")
 	task_name, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 	task_name = strings.TrimSuffix(task_name, "\n")
 
-	result := task{daily, mandatory, due_date, "defaultDate", task_name}
+	result := task{daily, mandatory, dueDate, "defaultDate", task_name}
 	return result
 }
 
@@ -174,7 +189,7 @@ func tidy(S []task) []task {
 	for {
 		inorder := true
 		for i := 0; i <= length; i++ {
-			if S[i].date_added > S[i+1].date_added {
+			if S[i].dateAdded > S[i+1].dateAdded {
 				small := S[i+1]
 				big := S[i]
 				S[i] = small
@@ -191,7 +206,7 @@ func tidy(S []task) []task {
 	for {
 		inorder := true
 		for i := 0; i <= length; i++ {
-			if S[i].due_date > S[i+1].due_date {
+			if S[i].dueDate > S[i+1].dueDate {
 				small := S[i+1]
 				big := S[i]
 				S[i] = small
@@ -248,11 +263,11 @@ func tidy(S []task) []task {
 	return S
 }
 
-func load_csv(tasks_cache string) []task {
+func load_csv(tasksCache string) []task {
 
 	var task_list []task
 
-	f, _ := os.Open(tasks_cache)
+	f, _ := os.Open(tasksCache)
 	defer f.Close()
 
 	var lines []string
@@ -276,13 +291,13 @@ func load_csv(tasks_cache string) []task {
 			mandatory = true
 		}
 
-		due_date := strings.Split(j, ",")[2]
+		dueDate := strings.Split(j, ",")[2]
 
-		date_added := strings.Split(j, ",")[3]
+		dateAdded := strings.Split(j, ",")[3]
 
 		description := strings.Split(j, ",")[4]
 
-		slice := task{daily, mandatory, due_date, date_added, description}
+		slice := task{daily, mandatory, dueDate, dateAdded, description}
 
 		task_list = append(task_list, slice)
 	}
@@ -290,9 +305,9 @@ func load_csv(tasks_cache string) []task {
 	return task_list
 }
 
-func save_csv(task_list []task, tasks_cache, today_cache string, today int) []task {
+func save_csv(task_list []task, tasksCache, today_cache string, today int) []task {
 
-	f, _ := os.Create(tasks_cache)
+	f, _ := os.Create(tasksCache)
 	defer f.Close()
 
 	var list []string
@@ -313,7 +328,7 @@ func save_csv(task_list []task, tasks_cache, today_cache string, today int) []ta
 				fmt.Fprint(f, "\n")
 			}
 
-			fmt.Fprint(f, value.daily, ",", value.mandatory, ",", value.due_date, ",", value.date_added, ",", value.description)
+			fmt.Fprint(f, value.daily, ",", value.mandatory, ",", value.dueDate, ",", value.dateAdded, ",", value.description)
 			list = append(list, value.description)
 			new_task_list = append(new_task_list, value)
 		}
@@ -327,13 +342,13 @@ func main() {
 
 	user, _ := user.Current()
 
-	tasks_cache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/tasks.csv"}, "")
-	dailies_cache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/dailies.csv"}, "")
-	last_run_cache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/last_run_date.txt"}, "")
+	tasksCache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/tasks.csv"}, "")
+	dailiesCache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/dailies.csv"}, "")
+	lastRunCache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/last_run_date.txt"}, "")
 	today_cache := strings.Join([]string{"/home/", string(user.Username), "/.cache/gtm/today.txt"}, "")
-	task_list := load_csv(tasks_cache)
+	task_list := load_csv(tasksCache)
 
-	today, dailies := initi(dailies_cache, tasks_cache, last_run_cache, today_cache)
+	today, dailies := initi(dailiesCache, tasksCache, lastRunCache, today_cache)
 
 	task_list = append(task_list, dailies...)
 
@@ -354,7 +369,7 @@ func main() {
 		if j.mandatory == true {
 			fmt.Print("! ")
 		}
-		fmt.Print(j.description, " (", j.due_date, ")")
+		fmt.Print(j.description, " (", j.dueDate, ")")
 		fmt.Print("\n")
 	} else {
 		fmt.Println("command not recognized")
@@ -362,7 +377,7 @@ func main() {
 
 	if *wordPtr != "next" {
 		task_list = tidy(task_list)
-		task_list = save_csv(task_list, tasks_cache, today_cache, today)
+		task_list = save_csv(task_list, tasksCache, today_cache, today)
 		present(task_list, today, user.Name)
 	}
 }
