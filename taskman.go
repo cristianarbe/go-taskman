@@ -92,7 +92,11 @@ func array_grep(task_list []task, value bool) []task {
 		//fmt.Println(should_write,j)
 
 		if /*should_write &&*/ matches_input {
+			if i < 10 {
+		    fmt.Print("[#0", i, "] ")	
+			} else {
 			fmt.Print("[#", i, "] ")
+			}
 			if j.mandatory == true {
 				fmt.Print("! ")
 			} else {
